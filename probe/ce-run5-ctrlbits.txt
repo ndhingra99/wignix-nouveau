@@ -1,0 +1,17 @@
+
+== variant d
+B2 stencil after clear to 5a: first 55 last 55, 3072 pixels wrong
+      1 fifo: ce0 800: 441202c0
+      1 fifo: fault 01 [WRITE] at 00000000fdee4000 engine 15 [PCE0] client 01 [HUB/PCOPY0] reason 00
+== variant b
+B2 stencil after clear to 5a: first 5a last 5a, 0 pixels wrong
+      1 fifo: ce0 800: 440200c0
+      1 fifo: fault 01 [WRITE] at 00000000fdee8000 engine 15 [PCE0] client 01 [HUB/PCOPY0] reason 00
+== variant e
+B2 stencil after clear to 5a: first 55 last 55, 3072 pixels wrong
+      1 fifo: ce0 800: 440a02c0
+      1 fifo: fault 01 [WRITE] at 00000000fdee4000 engine 15 [PCE0] client 01 [HUB/PCOPY0] reason 00
+== variant f
+B2 stencil after clear to 5a: first 5a last 5a, 0 pixels wrong
+      1 fifo: ce0 800: 441b00c0
+      1 fifo: fault 01 [WRITE] at 00000000fdee8000 engine 15 [PCE0] client 01 [HUB/PCOPY0] reason 00

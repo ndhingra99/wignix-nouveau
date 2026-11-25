@@ -1,0 +1,11 @@
+#version 450
+// Z4: the four samples of every pixel of an 8x8 4x image
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(set = 0, binding = 0) uniform sampler2DMS t;
+layout(set = 0, binding = 1) buffer O { uint o[]; };
+void main()
+{
+	ivec2 p = ivec2(gl_LocalInvocationID.xy);
+	for (int s = 0; s < 4; s++)
+		o[(p.y * 8 + p.x) * 4 + s] = packUnorm4x8(texelFetch(t, p, s));
+}

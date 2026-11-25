@@ -1,0 +1,8 @@
+
+ce copy: src 0000003efdee8000 dst 0000003efdee4000 linear format 00306663 exec 101 64x48
+ce copy: src 0000003efdee4000 linear dst 0000003efdee8000 format 03000666 exec 11 64x48
+ce copy: src 0000003efdee8000 dst 0000003efdee4000 linear format 00306663 exec 101 64x48
+B2 stencil after clear to 5a: first 5a last 5a, 0 pixels wrong
+B3 stencil after upload: 0 pixels wrong (first 00 05 0a)
+B4 depth after stencil upload: first 800000 last 800000 (unchanged = yes)
+      3 ce0: test image: code 1536 data 552 bytes

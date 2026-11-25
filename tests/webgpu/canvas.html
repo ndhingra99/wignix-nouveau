@@ -1,0 +1,58 @@
+<!doctype html><meta charset="utf-8"><title>wgpu-canvas</title>
+<body style="margin:0;background:#202020;color:#ddd;font:14px monospace">
+<canvas id="c" width="480" height="360" style="display:block"></canvas><pre id="o">running</pre>
+<script>
+// WebGPU presenting to a canvas: a rotating triangle with per-vertex colours
+// over a blue clear, the angle from a uniform buffer written every frame.
+const out = [];
+const log = (...a) => { out.push(a.join(' ')); document.getElementById('o').textContent = out.join('\n'); console.log('WGPU ' + a.join(' ')); };
+(async () => {
+  try {
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) { log('RESULT no adapter'); return; }
+    log('adapter: vendor', adapter.info.vendor, 'architecture', adapter.info.architecture);
+    const device = await adapter.requestDevice();
+    device.lost.then(l => log('DEVICE LOST:', l.reason, l.message));
+    device.addEventListener('uncapturederror', e => log('UNCAPTURED ERROR:', e.error.message));
+    const ctx = document.getElementById('c').getContext('webgpu');
+    const format = navigator.gpu.getPreferredCanvasFormat();
+    ctx.configure({ device, format, alphaMode: 'opaque' });
+    log('canvas format', format);
+    const ubo = device.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
+    const mod = device.createShaderModule({ code: `
+      @group(0) @binding(0) var<uniform> angle : f32;
+      struct V { @builtin(position) pos : vec4f, @location(0) col : vec3f }
+      @vertex fn vs(@builtin(vertex_index) v : u32) -> V {
+        var p = array<vec2f, 3>(vec2f(0.0, 0.7), vec2f(-0.7, -0.6), vec2f(0.7, -0.6));
+        var c = array<vec3f, 3>(vec3f(1.0, 0.0, 0.0), vec3f(0.0, 1.0, 0.0), vec3f(1.0, 1.0, 0.0));
+        let s = sin(angle); let k = cos(angle);
+        var o : V;
+        o.pos = vec4f(p[v].x * k - p[v].y * s, (p[v].x * s + p[v].y * k) * 1.333, 0.0, 1.0);
+        o.col = c[v];
+        return o;
+      }
+      @fragment fn fs(i : V) -> @location(0) vec4f { return vec4f(i.col, 1.0); }` });
+    const pipe = await device.createRenderPipelineAsync({ layout: 'auto',
+      vertex: { module: mod, entryPoint: 'vs' },
+      fragment: { module: mod, entryPoint: 'fs', targets: [{ format }] } });
+    const bg = device.createBindGroup({ layout: pipe.getBindGroupLayout(0),
+      entries: [{ binding: 0, resource: { buffer: ubo } }] });
+    let frames = 0;
+    const t0 = performance.now();
+    function frame() {
+      device.queue.writeBuffer(ubo, 0, new Float32Array([(performance.now() - t0) / 1000, 0, 0, 0]));
+      const enc = device.createCommandEncoder();
+      const pass = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(),
+        clearValue: [0.0, 0.1, 0.4, 1], loadOp: 'clear', storeOp: 'store' }] });
+      pass.setPipeline(pipe); pass.setBindGroup(0, bg); pass.draw(3); pass.end();
+      device.queue.submit([enc.finish()]);
+      frames++;
+      if (frames % 120 === 0)
+        log('frames', frames, 'in', ((performance.now() - t0) / 1000).toFixed(1), 's');
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    log('RESULT rendering');
+  } catch (e) { log('RESULT exception:', e && (e.message || e)); }
+})();
+</script>

@@ -1,0 +1,10 @@
+#version 450
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0) uniform sampler2DMS t;
+layout(std430, set = 0, binding = 1) buffer B { uint v[]; };
+void main()
+{
+	int x = int(gl_GlobalInvocationID.x);
+	for (int s = 0; s < 4; s++)
+		v[x * 4 + s] = uint(texelFetch(t, ivec2(x, 63 - x), s).r * 255.0 + 0.5);
+}

@@ -1,0 +1,11 @@
+#version 450
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(set = 0, binding = 0) uniform sampler2D t;
+layout(std430, set = 0, binding = 1) buffer B { uint v[]; };
+void main()
+{
+	ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+	vec4 c = textureLod(t, (vec2(p) + 0.5) / vec2(64.0, 48.0), 0.0);
+	uvec4 u = uvec4(c * 255.0 + 0.5);
+	v[p.x + 64 * p.y] = u.r | (u.g << 8) | (u.b << 16) | (u.a << 24);
+}

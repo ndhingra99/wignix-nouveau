@@ -1,0 +1,34 @@
+
+NVK classes: 3d 9097 2d 902d m2mf 9039 copy 90b5 compute 90c0, chipset 0c3, sm 21
+ce copy: src 0000003efdee8000 dst 0000003efdee4000 linear format 00306663 exec 101 64x48
+ce copy: src 0000003efdee4000 linear dst 0000003efdee8000 format 03000666 exec 11 64x48
+vkQueueSubmit(queue, 1, &(VkSubmitInfo){ .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO, .commandBufferCount
+B2 stencil after clear to 5a: first 55 last 55, 3072 pixels wrong
+      3 ce0: test image: code 1536 data 552 bytes
+      1 gr: ILLEGAL_MTHD ch 5 [007f859000 vkds[9770]] subc 0 class 9097 mthd 0da4 data 00001000
+      1 gr: ILLEGAL_MTHD ch 5 [007f859000 vkds[9770]] subc 0 class 9097 mthd 0da4 data 00001010
+      1 gr: ILLEGAL_MTHD ch 5 [007f859000 vkds[9770]] subc 0 class 9097 mthd 0da4 data 00001000
+      1 fifo: ce0 604: 00000110
+      1 fifo: ce0 608: 00000110
+      1 fifo: ce0 61c: 00000000
+      1 fifo: ce0 624: 00000010
+      1 fifo: ce0 800: 440302c0
+      1 fifo: ce0 804: 00000030
+      1 fifo: ce0 808: fdee8000
+      1 fifo: ce0 80c: fdee4000
+      1 fifo: ce0 810: 00000100
+      1 fifo: ce0 814: 00000040
+      1 fifo: ce0 818: 003e0010
+      1 fifo: ce0 81c: 003e0000
+      1 fifo: ce0 820: 00040040
+      1 fifo: ce0 824: 00004000
+      1 fifo: ce0 828: 00003000
+      1 fifo: ce0 82c: 00000040
+      1 fifo: ce0 830: 00000003
+      1 fifo: ce0 834: 00000003
+      1 fifo: ce0 838: 00000000
+      1 fifo: ce0 040: 00000000
+      1 fifo: ce0 044: 00000000
+      1 fifo: fault 01 [WRITE] at 00000000fdee4000 engine 15 [PCE0] client 01 [HUB/PCOPY0] reason 00 [PT_NOT_PRESENT] on chann
+      1 vkds[9770]: channel 5 killed!
+      1 ce0: test image: code 1536 data 552 bytes

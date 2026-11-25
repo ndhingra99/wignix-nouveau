@@ -1,0 +1,43 @@
+#version 450
+// Arrays of descriptors indexed at run time (dynamically uniform indices
+// from push constants).  vkdyn.c fills the arrays and checks o[].
+layout(local_size_x = 1) in;
+
+layout(set = 0, binding = 0) uniform sampler2D ctex[4];
+layout(set = 0, binding = 1) uniform texture2D stex[3];
+layout(set = 0, binding = 2) uniform sampler smp[2];
+layout(set = 0, binding = 3) readonly buffer SB { uint v; } sb[3];
+layout(set = 0, binding = 4) uniform UB { uint v; } ub[3];
+layout(set = 0, binding = 5, rgba8) readonly uniform image2D simg[3];
+layout(set = 0, binding = 6) uniform sampler2DArray carr[2];
+layout(set = 0, binding = 7) buffer OUT { uint o[]; };
+
+layout(push_constant) uniform PC { uint p[8]; } pc;
+
+uint pk(vec4 c) { return packUnorm4x8(c); }
+
+void main()
+{
+	for (int i = 0; i < 4; i++)
+		o[i] = pk(textureLod(ctex[pc.p[i]], vec2(0.5), 0.0));
+
+	o[4] = pk(textureLod(sampler2D(stex[pc.p[4]], smp[pc.p[7]]), vec2(-1.0), 0.0));
+	o[5] = pk(textureLod(sampler2D(stex[pc.p[5]], smp[pc.p[7] ^ 1u]), vec2(-1.0), 0.0));
+	o[6] = pk(textureLod(sampler2D(stex[pc.p[6]], smp[0]), vec2(0.5), 0.0));
+
+	for (int i = 0; i < 3; i++) {
+		o[7 + i] = sb[pc.p[4 + i]].v;
+		o[10 + i] = ub[pc.p[4 + i]].v;
+		o[13 + i] = pk(imageLoad(simg[pc.p[4 + i]], ivec2(0)));
+	}
+
+	o[16] = pk(textureLod(carr[pc.p[7]], vec3(0.5, 0.5, 0.0), 0.0));
+	o[17] = pk(textureLod(carr[pc.p[7]], vec3(0.5, 0.5, 1.0), 0.0));
+	o[18] = pk(textureLod(carr[pc.p[7] ^ 1u], vec3(0.5, 0.5, 0.0), 0.0));
+	o[19] = pk(textureLod(carr[pc.p[7] ^ 1u], vec3(0.5, 0.5, 1.0), 0.0));
+
+	for (int i = 0; i < 4; i++) {
+		o[20 + i] = uint(textureSize(ctex[pc.p[i]], 0).x);
+		o[24 + i] = pk(texelFetch(ctex[pc.p[i]], ivec2(1, 1), 0));
+	}
+}

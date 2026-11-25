@@ -1,0 +1,11 @@
+#version 450
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(set = 0, binding = 0, r32ui) uniform uimage2D img;
+layout(std430, set = 0, binding = 1) buffer B { uint v[]; };
+void main()
+{
+	ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+	uint old = imageAtomicAdd(img, ivec2(p.x & 3, p.y & 3), 1u);
+	if (old >= 4096u)
+		v[0] = 0xdeadu;
+}

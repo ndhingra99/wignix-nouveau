@@ -1,0 +1,8 @@
+#version 450
+// diagnosis: the smallest dispatch
+layout(local_size_x = 1) in;
+layout(set = 0, binding = 0) buffer O { uint o; };
+void main()
+{
+	o = 42u;
+}

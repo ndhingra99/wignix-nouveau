@@ -1,0 +1,16 @@
+#version 450
+layout(local_size_x = 64) in;
+layout(std430, set = 0, binding = 0) buffer B { uint v[]; };
+layout(push_constant) uniform P { uint a; uint b; } pc;
+void main()
+{
+	uint l = gl_LocalInvocationID.x;
+	v[l] = gl_GlobalInvocationID.x;
+	v[64u + l] = gl_WorkGroupID.x;
+	v[128u + l] = gl_NumWorkGroups.x;
+	v[192u + l] = pc.a;
+	v[256u + l] = gl_WorkGroupID.y;
+	v[320u + l] = gl_WorkGroupID.z;
+	v[384u + l] = gl_NumWorkGroups.y;
+	v[448u + l] = gl_NumWorkGroups.z;
+}

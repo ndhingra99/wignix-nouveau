@@ -1,0 +1,10 @@
+#version 450
+layout(local_size_x = 4, local_size_y = 4) in;
+layout(set = 0, binding = 0, rgba32i) uniform iimage3D img;
+layout(std430, set = 0, binding = 1) buffer B { uvec4 v[]; };
+void main()
+{
+	ivec3 p = ivec3(gl_GlobalInvocationID);
+	ivec4 val = ivec4(p.x, -p.y, p.x + p.y + p.z * 3, 1);
+	imageStore(img, p, val);
+}

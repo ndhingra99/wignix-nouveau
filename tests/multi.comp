@@ -1,0 +1,18 @@
+#version 450
+layout(local_size_x = 4, local_size_y = 4, local_size_z = 2) in;
+layout(std430, set = 0, binding = 0) buffer B { uint v[]; };
+layout(set = 0, binding = 1) uniform U { uint k[4]; } u;
+shared uint acc[32];
+void main()
+{
+	uint li = gl_LocalInvocationIndex;
+	acc[li] = li * 3u + u.k[1];
+	barrier();
+	uint other = acc[31u - li];
+	uvec3 g = gl_GlobalInvocationID;
+	uvec3 n = gl_NumWorkGroups * gl_WorkGroupSize;
+	uint idx = g.x + n.x * (g.y + n.y * g.z);
+	v[idx] = other + (g.x & 7u) * gl_WorkGroupID.z +
+		 gl_NumWorkGroups.x * 0x100u + gl_NumWorkGroups.y * 0x10000u +
+		 gl_NumWorkGroups.z * 0x1000000u;
+}

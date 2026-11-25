@@ -1,0 +1,6 @@
+#version 450
+// diagnosis: a dispatch that reads and writes nothing
+layout(local_size_x = 1) in;
+void main()
+{
+}

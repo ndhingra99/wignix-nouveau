@@ -1,0 +1,31 @@
+
+== port 0
+B2 stencil after clear to 5a: first 55 last 55, 3072 pixels wrong
+      1 fifo: ce0 604: 00000000
+      1 fifo: ce0 608: 00000000
+      1 fifo: ce0 800: 440202c0
+      1 fifo: ce0 80c: fdee4000
+      1 fifo: ce0 818: 003e0010
+      1 fifo: ce0 81c: 003e0000
+      1 fifo: fault 01 [WRITE] at 00000000fdee4000 engine 15 [PCE0] client 01 [HUB/PCOPY0] reason 00 [PT_NOT_PRE
+      1 vkds[10065]: channel 5 killed!
+== port 544
+B2 stencil after clear to 5a: first 55 last 55, 3072 pixels wrong
+      1 fifo: ce0 604: 00000220
+      1 fifo: ce0 608: 00000220
+      1 fifo: ce0 800: 440202c0
+      1 fifo: ce0 80c: fdee4000
+      1 fifo: ce0 818: 003e0010
+      1 fifo: ce0 81c: 003e0000
+      1 fifo: fault 01 [WRITE] at 00000000fdee4000 engine 15 [PCE0] client 01 [HUB/PCOPY0] reason 00 [PT_NOT_PRE
+      1 vkds[10095]: channel 5 killed!
+== port 816
+B2 stencil after clear to 5a: first 55 last 55, 3072 pixels wrong
+      1 fifo: ce0 604: 00000330
+      1 fifo: ce0 608: 00000330
+      1 fifo: ce0 800: 440202c0
+      1 fifo: ce0 80c: fdee4000
+      1 fifo: ce0 818: 003e0010
+      1 fifo: ce0 81c: 003e0000
+      1 fifo: fault 01 [WRITE] at 00000000fdee4000 engine 15 [PCE0] client 01 [HUB/PCOPY0] reason 00 [PT_NOT_PRE
+      1 vkds[10129]: channel 5 killed!

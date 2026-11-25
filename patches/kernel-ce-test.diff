@@ -1,0 +1,163 @@
+diff -Nurp c/drivers/gpu/drm/nouveau/nvkm/engine/ce/gf100.c d/drivers/gpu/drm/nouveau/nvkm/engine/ce/gf100.c
+--- c/drivers/gpu/drm/nouveau/nvkm/engine/ce/gf100.c
++++ d/drivers/gpu/drm/nouveau/nvkm/engine/ce/gf100.c
+@@ -26,10 +26,18 @@
+ 
+ #include <nvif/class.h>
+ 
++extern int w520_ce_port;
++
+ static void
+ gf100_ce_init(struct nvkm_falcon *ce)
+ {
+-	nvkm_wr32(ce->engine.subdev.device, ce->addr + 0x084, ce->engine.subdev.inst);
++	struct nvkm_device *device = ce->engine.subdev.device;
++
++	nvkm_wr32(device, ce->addr + 0x084, ce->engine.subdev.inst);
++	if (w520_ce_port >= 0) {
++		nvkm_wr32(device, ce->addr + 0x604, w520_ce_port);
++		nvkm_wr32(device, ce->addr + 0x608, w520_ce_port);
++	}
+ }
+ 
+ static const struct nvkm_falcon_func
+diff -Nurp c/drivers/gpu/drm/nouveau/nvkm/engine/falcon.c d/drivers/gpu/drm/nouveau/nvkm/engine/falcon.c
+--- c/drivers/gpu/drm/nouveau/nvkm/engine/falcon.c
++++ d/drivers/gpu/drm/nouveau/nvkm/engine/falcon.c
+@@ -25,6 +25,17 @@
+ #include <subdev/mc.h>
+ #include <subdev/timer.h>
+ #include <engine/fifo.h>
++#include <linux/moduleparam.h>
++
++/* Test switches for the copy engine, changeable at run time through
++ * /sys/module/nouveau/parameters: a value for its source and destination
++ * memory ports (-1 leaves them alone), and whether to run the image in
++ * nouveau/ce_test_code and nouveau/ce_test_data instead of the built-in one.
++ */
++int w520_ce_port = -1;
++module_param(w520_ce_port, int, 0600);
++static bool w520_ce_fw;
++module_param(w520_ce_fw, bool, 0600);
+ 
+ static int
+ nvkm_falcon_oclass_get(struct nvkm_oclass *oclass, int index)
+@@ -162,9 +173,11 @@ nvkm_falcon_init(struct nvkm_engine *eng
+ 	struct nvkm_falcon *falcon = nvkm_falcon(engine);
+ 	struct nvkm_subdev *subdev = &falcon->engine.subdev;
+ 	struct nvkm_device *device = subdev->device;
+-	const struct firmware *fw;
++	const struct firmware *fw, *tcode = NULL, *tdata = NULL;
+ 	char name[32] = "internal";
+ 	const u32 base = falcon->addr;
++	const u32 *code, *data;
++	u32 code_size, data_size;
+ 	int ret, i;
+ 
+ 	/* wait for 'uc halted' to be signalled before continuing */
+@@ -259,6 +272,24 @@ nvkm_falcon_init(struct nvkm_engine *eng
+ 		nvkm_done(falcon->core);
+ 	}
+ 
++	code = falcon->code.data;
++	code_size = falcon->code.size;
++	data = falcon->data.data;
++	data_size = falcon->data.size;
++	if (w520_ce_fw && subdev->type == NVKM_ENGINE_CE && !falcon->core) {
++		if (!request_firmware(&tcode, "nouveau/ce_test_code", device->dev) &&
++		    !request_firmware(&tdata, "nouveau/ce_test_data", device->dev)) {
++			code = (const u32 *)tcode->data;
++			code_size = tcode->size;
++			data = (const u32 *)tdata->data;
++			data_size = tdata->size;
++			nvkm_info(subdev, "test image: code %u data %u bytes\n",
++				  code_size, data_size);
++		} else {
++			nvkm_error(subdev, "test image not found\n");
++		}
++	}
++
+ 	/* upload firmware bootloader (or the full code segments) */
+ 	if (falcon->core) {
+ 		u64 addr = nvkm_memory_addr(falcon->core);
+@@ -271,22 +302,24 @@ nvkm_falcon_init(struct nvkm_engine *eng
+ 		nvkm_wr32(device, base + 0x114, 0);
+ 		nvkm_wr32(device, base + 0x118, 0x00006610);
+ 	} else {
+-		if (falcon->code.size > falcon->code.limit ||
+-		    falcon->data.size > falcon->data.limit) {
++		if (code_size > falcon->code.limit ||
++		    data_size > falcon->data.limit) {
+ 			nvkm_error(subdev, "ucode exceeds falcon limit(s)\n");
++			release_firmware(tcode);
++			release_firmware(tdata);
+ 			return -EINVAL;
+ 		}
+ 
+ 		if (falcon->version < 3) {
+ 			nvkm_wr32(device, base + 0xff8, 0x00100000);
+-			for (i = 0; i < falcon->code.size / 4; i++)
+-				nvkm_wr32(device, base + 0xff4, falcon->code.data[i]);
++			for (i = 0; i < code_size / 4; i++)
++				nvkm_wr32(device, base + 0xff4, code[i]);
+ 		} else {
+ 			nvkm_wr32(device, base + 0x180, 0x01000000);
+-			for (i = 0; i < falcon->code.size / 4; i++) {
++			for (i = 0; i < code_size / 4; i++) {
+ 				if ((i & 0x3f) == 0)
+ 					nvkm_wr32(device, base + 0x188, i >> 6);
+-				nvkm_wr32(device, base + 0x184, falcon->code.data[i]);
++				nvkm_wr32(device, base + 0x184, code[i]);
+ 			}
+ 		}
+ 	}
+@@ -294,18 +327,21 @@ nvkm_falcon_init(struct nvkm_engine *eng
+ 	/* upload data segment (if necessary), zeroing the remainder */
+ 	if (falcon->version < 3) {
+ 		nvkm_wr32(device, base + 0xff8, 0x00000000);
+-		for (i = 0; !falcon->core && i < falcon->data.size / 4; i++)
+-			nvkm_wr32(device, base + 0xff4, falcon->data.data[i]);
++		for (i = 0; !falcon->core && i < data_size / 4; i++)
++			nvkm_wr32(device, base + 0xff4, data[i]);
+ 		for (; i < falcon->data.limit; i += 4)
+ 			nvkm_wr32(device, base + 0xff4, 0x00000000);
+ 	} else {
+ 		nvkm_wr32(device, base + 0x1c0, 0x01000000);
+-		for (i = 0; !falcon->core && i < falcon->data.size / 4; i++)
+-			nvkm_wr32(device, base + 0x1c4, falcon->data.data[i]);
++		for (i = 0; !falcon->core && i < data_size / 4; i++)
++			nvkm_wr32(device, base + 0x1c4, data[i]);
+ 		for (; i < falcon->data.limit / 4; i++)
+ 			nvkm_wr32(device, base + 0x1c4, 0x00000000);
+ 	}
+ 
++	release_firmware(tcode);
++	release_firmware(tdata);
++
+ 	/* start it running */
+ 	nvkm_wr32(device, base + 0x10c, 0x00000001); /* BLOCK_ON_FIFO */
+ 	nvkm_wr32(device, base + 0x104, 0x00000000); /* ENTRY */
+diff -Nurp c/drivers/gpu/drm/nouveau/nvkm/engine/fifo/gf100.c d/drivers/gpu/drm/nouveau/nvkm/engine/fifo/gf100.c
+--- c/drivers/gpu/drm/nouveau/nvkm/engine/fifo/gf100.c
++++ d/drivers/gpu/drm/nouveau/nvkm/engine/fifo/gf100.c
+@@ -543,6 +543,20 @@ gf100_fifo_mmu_fault_recover(struct nvkm
+ 	unsigned long flags;
+ 	char ct[8] = "HUB/";
+ 
++	/* Test aid: the copy engine's state at the time of its fault. */
++	if (info->engine == 0x15) {
++		static const u16 regs[] = {
++			0x604, 0x608, 0x61c, 0x624, 0x800, 0x804, 0x808, 0x80c,
++			0x810, 0x814, 0x818, 0x81c, 0x820, 0x824, 0x828, 0x82c,
++			0x830, 0x834, 0x838, 0x040, 0x044,
++		};
++		int i;
++
++		for (i = 0; i < ARRAY_SIZE(regs); i++)
++			nvkm_error(subdev, "ce0 %03x: %08x\n", regs[i],
++				   nvkm_rd32(device, 0x104000 + regs[i]));
++	}
++
+ 	/* Lookup engine by MMU fault ID. */
+ 	nvkm_runl_foreach(runl, fifo) {
+ 		engn = nvkm_runl_find_engn(engn, runl, engn->fault == info->engine);

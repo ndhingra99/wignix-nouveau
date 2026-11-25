@@ -1,0 +1,646 @@
+WARNING: NVK is not a conformant Vulkan implementation, testing use only.
+NIR for vertex shader:
+shader: MESA_SHADER_VERTEX
+source_blake3: {0x4a80fc93, 0x2d096f54, 0xbdf65c8e, 0x921bbb11, 0xcd609ef2, 0xfcfc8375, 0xff20ba4d, 0x82702f3b}
+name: 
+outputs_written: 0
+system_values_read: 0x00000000'00000000'00000000'00000200
+api_subgroup_size: 32
+max_subgroup_size: 32
+min_subgroup_size: 32
+bit_sizes_int: 0x20
+flrp_lowered: true
+scratch: 24
+decl_var shader_out INTERP_MODE_NONE none vec4 .gl_Position (VARYING_SLOT_POS.xyzw, 0, 0)
+decl_function main () (entrypoint)
+
+impl main {
+    con block b0:      // preds:
+    con 32x4  %0 = load_const (0xbf800000, 0xbf800000, 0x3f800000, 0x3f800000) = (-1.000000, -1.000000, 1.000000, 1.000000) = (-1082130432, -1082130432, +1065353216, +1065353216) = (3212836864, 3212836864, 1065353216, 1065353216)
+    con 32    %1 = load_const (0x00000000)
+                   @store_scratch_nv (%0 (0xbf800000, 0xbf800000, 0x3f800000, 0x3f800000), %1 (0x0), %1 (0x0)) (base=0, align_mul=1073741824, align_offset=0)
+    con 32x2  %2 = load_const (0xbf800000, 0x3f800000) = (-1.000000, 1.000000) = (-1082130432, +1065353216) = (3212836864, 1065353216)
+                   @store_scratch_nv (%2 (0xbf800000, 0x3f800000), %1 (0x0), %1 (0x0)) (base=16, align_mul=1073741824, align_offset=16)
+    div 32    %3 = @ald_nv (%1 (0x0), %1 (0x0)) (base=764, range_base=764, range=4, flags=0, access=reorderable)
+    con 32    %4 = load_const (0x00000003)
+    div 32    %5 = ishl %3, %4 (0x3)
+    div 32x2  %6 = @load_scratch_nv (%5, %1 (0x0)) (base=0, access=none, align_mul=8, align_offset=0)
+    con 32    %7 = load_const (0x3f800000 = 1.000000 = 1065353216)
+    div 32x4  %8 = vec4 %6.x, %6.y, %1 (0x0), %7 (0x3f800000)
+                   @ast_nv (%8, %1 (0x0), %1 (0x0)) (base=112, range_base=112, range=16, flags=1)
+                   // succs: b1
+    block b1:
+}
+
+NAK IR:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [%r4+%r4] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [%r4+%r4+0x10] {%r5 %r6}
+ %r7         = ald a[%r4][0x2fc+%r4]
+ %r8         = copy 0x3
+ %r9         = shl.w %r7 %r8
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+%r4], pT
+ %r12        = copy 0x3f800000
+ %r13        = copy %r10
+ %r14        = copy %r11
+ %r15        = copy %r4
+ %r16        = copy %r12
+               ast a[%r4][0x70+%r4] {%r13 %r14 %r15 %r16}
+               exit
+} -> []
+
+NAK IR after opt_bar_prop:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [%r4+%r4] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [%r4+%r4+0x10] {%r5 %r6}
+ %r7         = ald a[%r4][0x2fc+%r4]
+ %r8         = copy 0x3
+ %r9         = shl.w %r7 %r8
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+%r4], pT
+ %r12        = copy 0x3f800000
+ %r13        = copy %r10
+ %r14        = copy %r11
+ %r15        = copy %r4
+ %r16        = copy %r12
+               ast a[%r4][0x70+%r4] {%r13 %r14 %r15 %r16}
+               exit
+} -> []
+
+NAK IR after opt_uniform_instrs:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [%r4+%r4] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [%r4+%r4+0x10] {%r5 %r6}
+ %r7         = ald a[%r4][0x2fc+%r4]
+ %r8         = copy 0x3
+ %r9         = shl.w %r7 %r8
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+%r4], pT
+ %r12        = copy 0x3f800000
+ %r13        = copy %r10
+ %r14        = copy %r11
+ %r15        = copy %r4
+ %r16        = copy %r12
+               ast a[%r4][0x70+%r4] {%r13 %r14 %r15 %r16}
+               exit
+} -> []
+
+NAK IR after opt_copy_prop:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [rZ+rZ] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [rZ+rZ+0x10] {%r5 %r6}
+ %r7         = ald a[0x2fc]
+ %r8         = copy 0x3
+ %r9         = shl.w %r7 0x3
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+rZ], pT
+ %r12        = copy 0x3f800000
+ %r13        = copy %r10
+ %r14        = copy %r11
+ %r15        = copy rZ
+ %r16        = copy %r12
+               ast a[0x70] {%r10 %r11 %r4 %r12}
+               exit
+} -> []
+
+NAK IR after opt_prmt:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [rZ+rZ] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [rZ+rZ+0x10] {%r5 %r6}
+ %r7         = ald a[0x2fc]
+ %r8         = copy 0x3
+ %r9         = shl.w %r7 0x3
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+rZ], pT
+ %r12        = copy 0x3f800000
+ %r13        = copy %r10
+ %r14        = copy %r11
+ %r15        = copy rZ
+ %r16        = copy %r12
+               ast a[0x70] {%r10 %r11 %r4 %r12}
+               exit
+} -> []
+
+NAK IR after opt_lop:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [rZ+rZ] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [rZ+rZ+0x10] {%r5 %r6}
+ %r7         = ald a[0x2fc]
+ %r8         = copy 0x3
+ %r9         = shl.w %r7 0x3
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+rZ], pT
+ %r12        = copy 0x3f800000
+ %r13        = copy %r10
+ %r14        = copy %r11
+ %r15        = copy rZ
+ %r16        = copy %r12
+               ast a[0x70] {%r10 %r11 %r4 %r12}
+               exit
+} -> []
+
+NAK IR after opt_copy_prop:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [rZ+rZ] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [rZ+rZ+0x10] {%r5 %r6}
+ %r7         = ald a[0x2fc]
+ %r8         = copy 0x3
+ %r9         = shl.w %r7 0x3
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+rZ], pT
+ %r12        = copy 0x3f800000
+ %r13        = copy %r10
+ %r14        = copy %r11
+ %r15        = copy rZ
+ %r16        = copy %r12
+               ast a[0x70] {%r10 %r11 %r4 %r12}
+               exit
+} -> []
+
+NAK IR after opt_dce:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [rZ+rZ] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [rZ+rZ+0x10] {%r5 %r6}
+ %r7         = ald a[0x2fc]
+ %r9         = shl.w %r7 0x3
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+rZ], pT
+ %r12        = copy 0x3f800000
+               ast a[0x70] {%r10 %r11 %r4 %r12}
+               exit
+} -> []
+
+NAK IR after opt_out:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [rZ+rZ] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [rZ+rZ+0x10] {%r5 %r6}
+ %r7         = ald a[0x2fc]
+ %r9         = shl.w %r7 0x3
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+rZ], pT
+ %r12        = copy 0x3f800000
+               ast a[0x70] {%r10 %r11 %r4 %r12}
+               exit
+} -> []
+
+NAK IR after legalize:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [rZ+rZ] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [rZ+rZ+0x10] {%r5 %r6}
+ %r7         = ald a[0x2fc]
+ %r9         = shl.w %r7 0x3
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+rZ], pT
+ %r12        = copy 0x3f800000
+               ast a[0x70] {%r10 %r11 %r4 %r12}
+               exit
+} -> []
+
+NAK IR after opt_dce:
+block.u 0 L0 [] -> {
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+ %r4         = copy rZ
+               st.local.strong.cta.b128 [rZ+rZ] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [rZ+rZ+0x10] {%r5 %r6}
+ %r7         = ald a[0x2fc]
+ %r9         = shl.w %r7 0x3
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+rZ], pT
+ %r12        = copy 0x3f800000
+               ast a[0x70] {%r10 %r11 %r4 %r12}
+               exit
+} -> []
+
+NAK IR after opt_instr_sched_prepass:
+block.u 0 L0 [] -> {
+ %r4         = copy rZ
+ %r12        = copy 0x3f800000
+ %r0         = copy 0xbf800000
+ %r1         = copy 0xbf800000
+ %r2         = copy 0x3f800000
+ %r3         = copy 0x3f800000
+               st.local.strong.cta.b128 [rZ+rZ] {%r0 %r1 %r2 %r3}
+ %r5         = copy 0xbf800000
+ %r6         = copy 0x3f800000
+               st.local.strong.cta.b64 [rZ+rZ+0x10] {%r5 %r6}
+ %r7         = ald a[0x2fc]
+ %r9         = shl.w %r7 0x3
+ {%r10 %r11} = ld.local.strong.cta.b64 [%r9+rZ], pT
+               ast a[0x70] {%r10 %r11 %r4 %r12}
+               exit
+} -> []
+
+NAK IR after assign_regs:
+block.u 0 L0 [] -> {
+ r2    = copy rZ
+ r3    = copy 0x3f800000
+ r4    = copy 0xbf800000
+ r5    = copy 0xbf800000
+ r6    = copy 0x3f800000
+ r7    = copy 0x3f800000
+         st.local.strong.cta.b128 [rZ+rZ] r4..8
+ r0    = copy 0xbf800000
+ r1    = copy 0x3f800000
+         st.local.strong.cta.b64 [rZ+rZ+0x10] r0..2
+ r0    = ald a[0x2fc]
+ r0    = shl.w r0 0x3
+ r4..6 = ld.local.strong.cta.b64 [r0+rZ], pT
+         par_copy r8 = r4, r9 = r5, r10 = r2, r11 = r3
+         ast a[0x70] r8..12
+         exit
+} -> []
+
+NAK IR after lower_par_copies:
+block.u 0 L0 [] -> {
+ r2    = copy rZ
+ r3    = copy 0x3f800000
+ r4    = copy 0xbf800000
+ r5    = copy 0xbf800000
+ r6    = copy 0x3f800000
+ r7    = copy 0x3f800000
+         st.local.strong.cta.b128 [rZ+rZ] r4..8
+ r0    = copy 0xbf800000
+ r1    = copy 0x3f800000
+         st.local.strong.cta.b64 [rZ+rZ+0x10] r0..2
+ r0    = ald a[0x2fc]
+ r0    = shl.w r0 0x3
+ r4..6 = ld.local.strong.cta.b64 [r0+rZ], pT
+ r11   = copy r3
+ r10   = copy r2
+ r9    = copy r5
+ r8    = copy r4
+         ast a[0x70] r8..12
+         exit
+} -> []
+
+NAK IR after lower_copy_swap:
+block.u 0 L0 [] -> {
+ r2    = mov rZ
+ r3    = mov 0x3f800000
+ r4    = mov 0xbf800000
+ r5    = mov 0xbf800000
+ r6    = mov 0x3f800000
+ r7    = mov 0x3f800000
+         st.local.strong.cta.b128 [rZ+rZ] r4..8
+ r0    = mov 0xbf800000
+ r1    = mov 0x3f800000
+         st.local.strong.cta.b64 [rZ+rZ+0x10] r0..2
+ r0    = ald a[0x2fc]
+ r0    = shl.w r0 0x3
+ r4..6 = ld.local.strong.cta.b64 [r0+rZ], pT
+ r11   = mov r3
+ r10   = mov r2
+ r9    = mov r5
+ r8    = mov r4
+         ast a[0x70] r8..12
+         exit
+} -> []
+
+NAK IR after opt_crs:
+block.u 0 L0 [] -> {
+ r2    = mov rZ
+ r3    = mov 0x3f800000
+ r4    = mov 0xbf800000
+ r5    = mov 0xbf800000
+ r6    = mov 0x3f800000
+ r7    = mov 0x3f800000
+         st.local.strong.cta.b128 [rZ+rZ] r4..8
+ r0    = mov 0xbf800000
+ r1    = mov 0x3f800000
+         st.local.strong.cta.b64 [rZ+rZ+0x10] r0..2
+ r0    = ald a[0x2fc]
+ r0    = shl.w r0 0x3
+ r4..6 = ld.local.strong.cta.b64 [r0+rZ], pT
+ r11   = mov r3
+ r10   = mov r2
+ r9    = mov r5
+ r8    = mov r4
+         ast a[0x70] r8..12
+         exit
+} -> []
+
+NAK IR after opt_instr_sched_postpass:
+block.u 0 L0 [] -> {
+ r4    = mov 0xbf800000
+ r5    = mov 0xbf800000
+ r6    = mov 0x3f800000
+ r7    = mov 0x3f800000
+ r0    = mov 0xbf800000
+ r1    = mov 0x3f800000
+         st.local.strong.cta.b128 [rZ+rZ] r4..8
+         st.local.strong.cta.b64 [rZ+rZ+0x10] r0..2
+ r0    = ald a[0x2fc]
+ r0    = shl.w r0 0x3
+ r4..6 = ld.local.strong.cta.b64 [r0+rZ], pT
+ r3    = mov 0x3f800000
+ r2    = mov rZ
+ r11   = mov r3
+ r10   = mov r2
+ r9    = mov r5
+ r8    = mov r4
+         ast a[0x70] r8..12
+         exit
+} -> []
+
+NAK IR after calc_instr_deps:
+block.u 0 L0 [] -> {
+ r4    = mov 0xbf800000                             // delay=1
+ r5    = mov 0xbf800000                             // delay=1
+ r6    = mov 0x3f800000                             // delay=1
+ r7    = mov 0x3f800000                             // delay=1
+ r0    = mov 0xbf800000                             // delay=1
+ r1    = mov 0x3f800000                             // delay=8
+         st.local.strong.cta.b128 [rZ+rZ] r4..8     // delay=1 rd:0
+         st.local.strong.cta.b64 [rZ+rZ+0x10] r0..2 // delay=4 rd:1
+ r0    = ald a[0x2fc]                               // delay=24 wt=000010 wr:1
+ r0    = shl.w r0 0x3                               // delay=9 wt=000010
+ r4..6 = ld.local.strong.cta.b64 [r0+rZ], pT        // delay=13 wt=000001 wr:0
+ r3    = mov 0x3f800000                             // delay=1
+ r2    = mov rZ                                     // delay=8
+ r11   = mov r3                                     // delay=1
+ r10   = mov r2                                     // delay=1
+ r9    = mov r5                                     // delay=1 wt=000001
+ r8    = mov r4                                     // delay=9
+         ast a[0x70] r8..12                         // delay=2 rd:0
+         exit                                       // delay=15 wt=000001
+         nop                                        // delay=2
+} -> []
+
+Stage: vertex
+Instruction count: 20
+Static cycle count: 148
+Max warps/SM: 48
+Spills to mem: 0
+Spills to reg: 0
+Fills from mem: 0
+Fills from reg: 0
+Num GPRs: 24
+SLM size: 24
+Header:
+  00020461 00000020 00000000 00000000 1f01c000 00000000 00000000 00000000
+  00000000 00000000 80000000 00000000 00000000 0000f000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+Encoded shader:
+  00011de2 1afe0000 00015de2 1afe0000 00019de2 18fe0000 0001dde2 18fe0000
+  00001de2 1afe0000 00005de2 18fe0000 03f11cc5 c8000000 43f01ca5 c8000000
+  fff01c06 040002fc 0c001e03 6000c000 00011ca5 c0000000 0000dde2 18fe0000
+  fc009de4 28000000 0c02dde4 28000000 08029de4 28000000 14025de4 28000000
+  10021de4 28000000 23f01c66 087e0070 00001de7 80000000 00001de4 40000000
+NIR for fragment shader:
+shader: MESA_SHADER_FRAGMENT
+source_blake3: {0x3de5ae35, 0x4ccd24cc, 0x78b189d7, 0xf1eba38d, 0x4e6d02e1, 0xef805471, 0xcf7790ee, 0x5a4f6f37}
+name: 
+outputs_written: 4
+api_subgroup_size: 32
+max_subgroup_size: 32
+min_subgroup_size: 32
+known_interpolation_qualifiers: true
+flrp_lowered: true
+origin_upper_left: true
+decl_var shader_out INTERP_MODE_NONE none vec4 c (FRAG_RESULT_DATA0.xyzw, 0, 0)
+decl_function main () (entrypoint)
+
+impl main {
+    con block b0:      // preds:
+    con 32    %0 = load_const (0x00000000 = 0.000000)
+                   @fs_out_nv (%0 (0x0)) (base=0)
+    con 32    %1 = load_const (0x3f800000 = 1.000000 = 1065353216)
+                   @fs_out_nv (%1 (0x3f800000)) (base=4)
+                   @fs_out_nv (%0 (0x0)) (base=8)
+                   @fs_out_nv (%1 (0x3f800000)) (base=12)
+                   @copy_fs_outputs_nv
+                   // succs: b1
+    block b1:
+}
+
+NAK IR:
+block.u 0 L0 [] -> {
+ %r0 = copy rZ
+ %r1 = copy 0x3f800000
+       reg_out { %r0, %r1, %r0, %r1 }
+       exit
+} -> []
+
+NAK IR after opt_bar_prop:
+block.u 0 L0 [] -> {
+ %r0 = copy rZ
+ %r1 = copy 0x3f800000
+       reg_out { %r0, %r1, %r0, %r1 }
+       exit
+} -> []
+
+NAK IR after opt_uniform_instrs:
+block.u 0 L0 [] -> {
+ %r0 = copy rZ
+ %r1 = copy 0x3f800000
+       reg_out { %r0, %r1, %r0, %r1 }
+       exit
+} -> []
+
+NAK IR after opt_copy_prop:
+block.u 0 L0 [] -> {
+ %r0 = copy rZ
+ %r1 = copy 0x3f800000
+       reg_out { rZ, %r1, rZ, %r1 }
+       exit
+} -> []
+
+NAK IR after opt_prmt:
+block.u 0 L0 [] -> {
+ %r0 = copy rZ
+ %r1 = copy 0x3f800000
+       reg_out { rZ, %r1, rZ, %r1 }
+       exit
+} -> []
+
+NAK IR after opt_lop:
+block.u 0 L0 [] -> {
+ %r0 = copy rZ
+ %r1 = copy 0x3f800000
+       reg_out { rZ, %r1, rZ, %r1 }
+       exit
+} -> []
+
+NAK IR after opt_copy_prop:
+block.u 0 L0 [] -> {
+ %r0 = copy rZ
+ %r1 = copy 0x3f800000
+       reg_out { rZ, %r1, rZ, %r1 }
+       exit
+} -> []
+
+NAK IR after opt_dce:
+block.u 0 L0 [] -> {
+ %r1 = copy 0x3f800000
+       reg_out { rZ, %r1, rZ, %r1 }
+       exit
+} -> []
+
+NAK IR after opt_out:
+block.u 0 L0 [] -> {
+ %r1 = copy 0x3f800000
+       reg_out { rZ, %r1, rZ, %r1 }
+       exit
+} -> []
+
+NAK IR after legalize:
+block.u 0 L0 [] -> {
+ %r1 = copy 0x3f800000
+       reg_out { rZ, %r1, rZ, %r1 }
+       exit
+} -> []
+
+NAK IR after opt_dce:
+block.u 0 L0 [] -> {
+ %r1 = copy 0x3f800000
+       reg_out { rZ, %r1, rZ, %r1 }
+       exit
+} -> []
+
+NAK IR after opt_instr_sched_prepass:
+block.u 0 L0 [] -> {
+ %r1 = copy 0x3f800000
+       reg_out { rZ, %r1, rZ, %r1 }
+       exit
+} -> []
+
+NAK IR after assign_regs:
+block.u 0 L0 [] -> {
+ r1 = copy 0x3f800000
+      par_copy r0 = rZ, r1 = r1, r2 = rZ, r3 = r1
+      exit
+} -> []
+
+NAK IR after lower_par_copies:
+block.u 0 L0 [] -> {
+ r1 = copy 0x3f800000
+ r3 = copy r1
+ r2 = copy rZ
+ r0 = copy rZ
+      exit
+} -> []
+
+NAK IR after lower_copy_swap:
+block.u 0 L0 [] -> {
+ r1 = mov 0x3f800000
+ r3 = mov r1
+ r2 = mov rZ
+ r0 = mov rZ
+      exit
+} -> []
+
+NAK IR after opt_crs:
+block.u 0 L0 [] -> {
+ r1 = mov 0x3f800000
+ r3 = mov r1
+ r2 = mov rZ
+ r0 = mov rZ
+      exit
+} -> []
+
+NAK IR after opt_instr_sched_postpass:
+block.u 0 L0 [] -> {
+ r1 = mov 0x3f800000
+ r3 = mov r1
+ r2 = mov rZ
+ r0 = mov rZ
+      exit
+} -> []
+
+NAK IR after calc_instr_deps:
+block.u 0 L0 [] -> {
+ r1 = mov 0x3f800000 // delay=9
+ r3 = mov r1         // delay=1
+ r2 = mov rZ         // delay=1
+ r0 = mov rZ         // delay=1
+      exit           // delay=15
+      nop            // delay=2
+} -> []
+
+Stage: fragment
+Instruction count: 6
+Static cycle count: 27
+Max warps/SM: 48
+Spills to mem: 0
+Spills to reg: 0
+Fills from mem: 0
+Fills from reg: 0
+Num GPRs: 24
+SLM size: 0
+Header:
+  00025462 00000000 00000000 00000000 00000000 80000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 0000000f 00000000 00000000 00000000 00000000 00000000
+  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+Encoded shader:
+  00005de2 18fe0000 0400dde4 28000000 fc009de4 28000000 fc001de4 28000000
+  00001de7 80000000 00001de4 40000000
+device: Quadro 2000M (NVK GF106)
+pixel 0: 255,127,64,255  centre: 255,127,64,255  last: 255,127,64,255
+clear-colour pixels: 4096, triangle-colour pixels: 0, of 4096

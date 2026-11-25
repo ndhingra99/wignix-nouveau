@@ -1,0 +1,13 @@
+#version 450
+layout(local_size_x = 64) in;
+layout(set = 0, binding = 0, r32ui) uniform uimageBuffer st;
+layout(std430, set = 0, binding = 1) buffer B { uint v[]; };
+layout(set = 0, binding = 2) uniform usamplerBuffer ut;
+void main()
+{
+	int i = int(gl_GlobalInvocationID.x);
+	uint a = texelFetch(ut, i).r;
+	uint b = imageLoad(st, i).r;
+	imageStore(st, i, uvec4(a * 2u + b));
+	v[i] = uint(textureSize(ut)) | (uint(imageSize(st)) << 16);
+}

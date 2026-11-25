@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><title>webgpu probe</title><pre id="o">running</pre>
+<script>
+const out = [];
+const log = (...a) => { out.push(a.join(' ')); document.getElementById('o').textContent = out.join('\n'); console.log('WGPU ' + a.join(' ')); };
+(async () => {
+  try {
+    if (!navigator.gpu) { log('RESULT no navigator.gpu'); return; }
+    for (const opts of [{}, {featureLevel: 'compatibility'}, {forceFallbackAdapter: true}]) {
+      const a = await navigator.gpu.requestAdapter(opts);
+      if (!a) { log('adapter', JSON.stringify(opts), 'null'); continue; }
+      const i = a.info || {};
+      log('adapter', JSON.stringify(opts), '| vendor', i.vendor, '| arch', i.architecture,
+          '| device', i.device, '| desc', i.description, '| fallback', a.isFallbackAdapter);
+      log('  features', [...a.features].sort().join(','));
+      const l = a.limits;
+      log('  limits tex2D', l.maxTextureDimension2D, 'bindGroups', l.maxBindGroups,
+          'sampledTex/stage', l.maxSampledTexturesPerShaderStage, 'samplers/stage', l.maxSamplersPerShaderStage,
+          'storageBuf/stage', l.maxStorageBuffersPerShaderStage, 'ubo/stage', l.maxUniformBuffersPerShaderStage,
+          'colorAtt', l.maxColorAttachments);
+    }
+    log('RESULT done');
+  } catch (e) { log('RESULT exception', e && e.message); }
+  document.title = 'done';
+})();
+</script>

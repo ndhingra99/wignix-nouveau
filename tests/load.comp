@@ -1,0 +1,10 @@
+#version 450
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(set = 0, binding = 0, rgba8) uniform readonly image2D img;
+layout(std430, set = 0, binding = 1) buffer B { uint v[]; };
+void main()
+{
+	ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+	uvec4 u = uvec4(imageLoad(img, p) * 255.0 + 0.5);
+	v[p.x + 64 * p.y] = u.r | (u.g << 8) | (u.b << 16) | (u.a << 24);
+}

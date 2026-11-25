@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><title>wgpu-canvas</title>
+<body style="margin:0;background:#202020;color:#ddd;font:14px monospace">
+<video id="v" src="testclip.mp4" width="480" height="270" muted autoplay loop playsinline style="display:block"></video><pre id="o">running</pre>
+<script>
+// Video through the compositor: an H.264 test pattern; reports decoder and progress.
+const log = (...a) => { document.getElementById('o').textContent += '\n' + a.join(' '); console.log('WGPU ' + a.join(' ')); };
+const v = document.getElementById('v');
+v.addEventListener('error', () => log('video error', v.error && v.error.message));
+v.addEventListener('playing', () => log('playing', v.videoWidth + 'x' + v.videoHeight));
+setInterval(() => {
+  const q = v.getVideoPlaybackQuality ? v.getVideoPlaybackQuality() : {};
+  log('t', v.currentTime.toFixed(1), 'frames', q.totalVideoFrames, 'dropped', q.droppedVideoFrames);
+}, 4000);
+</script>
